@@ -1,0 +1,922 @@
+\documentclass[a4paper,11pt]{article}
+
+\usepackage{html}
+
+\title{JOTM Examples guide}
+\author{Jeff Mesnil}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+  This guide describes examples provided with JOTM. It explains the
+  scenarii of the examples, how to setup and run them.
+\end{abstract}
+
+\noindent Updated May 25, 2005 by Roger Perey\\
+
+\tableofcontents
+
+\section{Available Examples}
+\label{sec:into}
+Five examples are available with JOTM:
+\begin{itemize}
+\item The first example, \hyperref{basic example}{\textbf{basic} (section
+  }{)}{sec:basic_example}, has some interesting features such as how to
+ configure JOTM to have clients accessing the same Transaction
+ Manager using RMI/JRMP or RMI/IIOP.
+\item The second example, \hyperref{jdbc example}{\textbf{jdbc} (section
+  }{)}{sec:jdbc_example}, explains how to use JOTM and JDBC to provide
+  distributed transactions with a database.
+\item The third example \hyperref{JDBC-DIST example}{\textbf{jdbc-dist} (section
+  }{)}{sec:jdbc-dist_example}, is JDBC-DIST or JDBC over distributed databases.
+ This section explains how to configure and use JDBC over multiple databases.
+\item The fourth example, \hyperref{JMS example}{\textbf{jms} (section
+  }{)}{sec:jms_example}, explains how to use JOTM with a JMS provider (JORAM)
+  supporting distributed transactional messages for your applications.
+\item The fifth example, \hyperref{Tomcat example}{\textbf{tomcat} (section
+  }{)}{sec:tomcat_example}, explains how to use JOTM with
+  Tomcat to provide distributed transactions with a database from a
+  Servlet or a JSP.
+
+\end{itemize}
+
+\section{Basic Example}
+\label{sec:basic_example}
+
+All Ant commands are executed from the \texttt{JOTM\_HOME/examples/basic/}
+directory of a JOTM \emph{distribution} (examples do not work from the JOTM 
+\emph{source} directory).
+
+\subsection{Basic Scenario}
+\label{sec:basic_scenario}
+
+
+The \textbf{BASIC} example is a simple example using a Transaction
+ Manager. The client application (\texttt{BasicExample} class)
+looks up the \texttt{UserTransaction}, and builds two transactions:
+\begin{itemize}
+\item The first transaction is a simple begin/commit
+\item the second transaction is also a simple begin/commit but is
+  rolled back due to a timeout expiration (the BasicExample thread sleeps
+ longer than the transaction timeout set for this transaction)
+\end{itemize}
+
+
+\subsection{Basic example Setup and compilation}
+\label{sec:basic_setup}
+
+To set up this example:
+\begin{itemize}
+\item create a name server (either a RMI registry or a CORBA nameserver)
+\item invoke JOTM as the Transaction Manager providing a \texttt{UserTransaction class} utilizing JNDI
+\item start \texttt{BasicExample} as the client application
+\item The Ant tool is required to compile and run all example tests
+\end{itemize}
+
+\noindent To compile the Basic example, in \texttt{JOTM\_HOME/examples/basic/} directory, type
+\begin{verbatim}
+  ant compile
+\end{verbatim}
+
+\subsection{Running the Basic example}
+\label{sec:basic_run}
+First, set \texttt{JOTM\_HOME} to the directory of your JOTM distribution (e.g.,
+\texttt{../jotm/output/dist}) from CVS.
+\begin{verbatim}
+UNIX
+  export JOTM\_HOME=<JOTM_distribution_directory>
+WINDOWS
+  Set JOTM\_HOME=<JOTM_distribution_directory>
+\end{verbatim}
+
+To run the Basic example, change directory to the \texttt{JOTM\_HOME/examples/basic/}
+directory.\\
+The example may be run with two different configurations for
+protocol communication:
+\begin{itemize}
+\item JOTM accessible through \textbf{RMI/JRMP} (default configuration)
+\item JOTM accessible through \textbf{RMI/IIOP}
+\end{itemize}
+
+\noindent The two commands for executing the Basic example are:
+\begin{verbatim}
+  ant run.rmi.jrmp
+  ant run.rmi.iiop
+\end{verbatim}
+
+\noindent The first assumes that JOTM is accessible through RMI/JRMP and
+that an RMI registry is running on default port 1099.\\
+The second assumes that JOTM is accessible through RMI/IIOP and
+that a CORBA name server is running on port 19751.\\
+Both assume the \texttt{UserTransaction} object is
+accessible on JNDI with the name \texttt{UserTransaction}.\\
+
+\noindent Note that these two targets are using the same
+class, \texttt{BasicExample}. They differ in their settings: one is
+for RMI/JRMP communication, the other is an RMI/IIOP client.
+
+\subsubsection{Basic example using RMI/JRMP}
+To run the Basic example using RMI/JRMP, enter (in a single line)
+ within directory \texttt{JOTM\_HOME/lib/},
+\begin{verbatim}
+UNIX
+  rmiregistry -J-classpath -Jjotm.jar:jotm_jrmp_stubs.jar 
+  -J-Djava.security.policy=../conf/java.policy &
+WINDOWS
+  rmiregistry -J-classpath -Jjotm.jar;jotm_jrmp_stubs.jar
+  J-Djava.security.policy=../conf/java.policy
+\end{verbatim}
+Then in \texttt{JOTM\_HOME/lib/}, (in a single line) type
+\begin{verbatim}
+UNIX
+  java -classpath jotm.jar:jotm_jrmp_stubs.jar:../conf/ 
+  org.objectweb.jotm.Main -u UserTransaction &
+WINDOWS
+  java -classpath jotm.jar;jotm_jrmp_stubs.jar; 
+  ../conf/ org.objectweb.jotm.Main -u UserTransaction
+
+\end{verbatim}
+
+
+\noindent In the \texttt{JOTM\_HOME/examples/basic/} directory, type
+\begin{verbatim}
+  ant run.rmi.jrmp
+\end{verbatim}
+\noindent NOTE: By default JOTM is configured to run with RMI/JRMP so no modification
+of the \texttt{JOTM\_HOME/conf/carol.properties} file is needed to run the 
+BASIC example using RMI/JRMP).
+
+\subsubsection{Basic example using RMI/IIOP}
+To run basic example using RMI/IIOP,  change the settings of JOTM
+to activate RMI/IIOP support : \
+in \texttt{JOTM\_HOME/conf/carol.properties}
+\begin{itemize}
+\item set \texttt{carol.protocols} to \texttt{iiop}
+\end{itemize}
+(RMI/IIOP is activated and is the default protocol)\\
+
+\noindent Then type
+\begin{verbatim}
+UNIX
+  tnameserv -ORBInitialPort 19751 &
+WINDOWS
+  tnameserv -ORBInitialPort 19751
+\end{verbatim}
+Then in \texttt{JOTM\_HOME/lib/}, type (in a single line)
+\begin{verbatim}
+UNIX
+  java -classpath jotm.jar:jotm_iiop_stubs.jar:../conf/ \
+  org.objectweb.jotm.Main -u UserTransaction &
+WINDOWS
+  java -classpath jotm.jar;jotm_iiop_stubs.jar; \
+  ../conf/ org.objectweb.jotm.Main -u UserTransaction 
+\end{verbatim}
+
+\noindent In the \texttt{JOTM\_HOME/examples/basic/} directory, type
+\begin{verbatim}
+  ant run.rmi.iiop
+\end{verbatim}
+
+\subsection{BASIC example Output}
+\label{sec:basic_output}
+Regardless of configuration, the output of Basic example is
+the same :
+\begin{verbatim}
+$ ...
+$
+$ [java] create initial context
+$ [java] lookup UserTransaction at : UserTransaction
+$
+$ [java] a simple transaction wich is committed:
+$ [java]        - initial status : STATUS_NO_TRANSACTION
+$ [java]        - after begin status : STATUS_ACTIVE
+$ [java]        - after commit status : STATUS_NO_TRANSACTION
+$
+$ [java] a simple transaction which is rolled back.
+$ [java] we set a transaction timeout to 1 second, begin the
+$ [java] transaction, and wait 5 seconds before commiting it:
+$ [java]        - initial status : STATUS_NO_TRANSACTION
+$ [java]        - after begin status : STATUS_ACTIVE
+$ [java]        - wait for 5 seconds
+$ [java]        - after rollback status : STATUS_NO_TRANSACTION
+$
+$ [java] Basic example is OK.
+$
+$ ...
+\end{verbatim}
+
+\noindent If the message \texttt{"Basic example is OK."}is output, the
+basic example is working. If not, check the JOTM
+settings. Usually, trouble is due to incorrect settings
+(clients try to access JOTM through RMI/JRMP expecting an RMI registry
+ but find a CORBA name server, i.e. RMI/IIOP instead...).
+
+\section{JDBC Example}
+\label{sec:jdbc_example}
+
+JOTM may be used with any database (utilizing a JDBC driver) providing
+distributed transactional access to a databases.\newline
+The JDBC example is a simple example using JTA
+transactions with XAPool to provide transactional access to a database.
+(Configuration files for PostgreSQL and MySQL are included with JDBC Example).\\
+
+\noindent NOTE: Ant commands are executed from \texttt{JOTM\_HOME/examples/jdbc/}
+directory of a JOTM \emph{distribution}. (Examples do not execute from the JOTM
+\emph{source} directory). 
+
+\subsection{Scenario}
+\label{sec:jdbc_scenario}
+
+JDBC Example Setup requires:
+\begin{itemize}
+\item a database is configured and started 
+\item an RMI registry is started
+\item the \texttt{JdbcExample} object is started
+\end{itemize}
+\noindent Jdbc Example starts a \texttt{DatabaseHelper} object with an embedded JOTM.
+In turn, this sets up the JDBC objects. (i.e. \texttt{java.sql.Connection} with XAPool
+from a configuration file) and sets JOTM as the transaction manager. This also binds
+ \texttt{UserTransaction} in JNDI.
+\begin{itemize}
+\item \texttt{JdbcExample} prints a table from the database (without
+  transaction)
+\item a transaction is started by \texttt{UserTransaction}
+\item an update statement is sent to the database
+\item the transaction is completed (either committed or rolled back)
+\item \texttt{JdbcExample} prints the table from the database (without
+  transaction)  
+\end{itemize}
+
+\subsection{Setup, compilation, and execution}
+\label{sec:jdbc_setup}
+
+Before starting the example, the database must be properly
+configured and the database server started.
+The JDBC example works with any database that provides a JDBC
+driver. JDBC example uses XAPool to take care of transactional
+behaviors for JDBC objects.
+JDBC example setup is explained for MySQL. For another database, it should be
+straightforward to configure it properly.
+
+\subsubsection{Database setup}
+\label{sec:jdbc_db_setup}
+
+The JDBC example set up expects:
+\begin{itemize}
+\item a database named \texttt{javatest}
+\item a user with a login \texttt{mojo} and password \texttt{jojo}
+(if a different user/password is used, the database properties file must change)
+\item a \emph{transactional} table named \texttt{testdata} described as following:\\
+  \begin{tabular}[t]{|c|c|}
+    \hline ID & FOO \\
+    \hline 1 & 1 \\
+    \hline
+  \end{tabular}
+  with 
+  \begin{itemize}
+  \item \texttt{id} being an \texttt{int} (\emph{primary key})
+  \item \texttt{foo} an \texttt{int}
+  \end{itemize}
+\end{itemize}
+
+\noindent For example, on MySQL enter:
+\begin{verbatim}
+mysql> GRANT ALL PRIVILEGES ON *.* TO mojo
+    ->   IDENTIFIED BY 'jojo' WITH GRANT OPTION;
+mysql> create database javatest;
+mysql> use javatest;
+mysql> create table testdata (
+    ->   id int not null auto_increment primary key,
+    ->   foo int)type=InnoDB;
+mysql> insert into testdata values(null, 1);
+\end{verbatim}
+NOTE: Do not forget to set \texttt{testdata} type to \texttt{InnoDB} to enable
+transaction support.\\
+
+Database configuration is stored in a database properties file (e.g. \texttt{mysql.properties} 
+or \texttt{postgresql.properties}) containing the following:
+
+\begin{itemize}
+\item \texttt{driver} - Name of the JDBC driver
+\item \texttt{url} - URL to connect to the data base
+\item \texttt{login} - user login
+\item \texttt{password} - user password 
+\end{itemize}
+
+\subsubsection{JDBC Example Compilation}
+In \texttt{JOTM\_HOME/examples/jdbc/} directory, type
+\begin{verbatim}
+     ant compile
+\end{verbatim}
+to compile the example
+
+\subsection{Run the example}
+\label{sec:jdbc_run}
+Set \texttt{JOTM\_HOME} to the directory of your JOTM distribution (e.g.,
+\texttt{.../jotm/output/dist}) from CVS.
+
+\noindent To execute the JDBC example, first check that RMI protocol is
+activated (\texttt{../../conf/carol.properties} \texttt{carol.protocols}
+ is set to \texttt{jrmp}.) \\
+To start a RMI registry on default port 1099, in \texttt{JOTM\_HOME/lib/} directory enter 
+ (in a single line):
+\begin{verbatim}
+UNIX
+     rmiregistry -J-classpath -Jjotm.jar:jotm_jrmp_stubs.jar \
+     -J-Djava.security.policy=../conf/java.policy &
+WINDOWS
+     rmiregistry -J-classpath -Jjotm.jar;jotm_jrmp_stubs.jar \
+     J-Djava.security.policy=../conf/java.policy
+\end{verbatim}
+
+\noindent Set the classpath:
+\begin{verbatim}
+UNIX 
+     export CLASSPATH=../../lib/jotm.jar:../../lib/jotm_jrmp_stubs.jar\
+     :../../lib/xapool.jar:../../conf:.:$JDBC_JARS \
+WINDOWS 
+     Set CLASSPATH=../../lib/jotm.jar; \
+     ../../lib/jotm_jrmp_stubs.jar\; \
+     ../../lib/xapool.jar;../../conf/;.;%JDBC_JARS% 
+\end{verbatim}
+where \texttt{JDBC\_JARS} is the location of the JDBC driver jar
+file(s). For example:
+\begin{itemize}
+\item \texttt{pg73jdbc2.jar} for PostgreSQL 7.3
+\item \texttt{mysql-connector-java-2.0.14-bin.jar} for MySQL 3.23
+\end{itemize}
+The latest JAR files may be downloaded from
+\begin{itemize}
+\item \url{http://www.mysql.com/downloads/api-jdbc-stable.html/}
+\item \url{http://jdbc.postgresql.org/download/}
+\end{itemize}
+
+\subsection{Executing the JDBC example}
+\label{sec:jdbc_exec}
+\noindent For example;
+\begin{verbatim}
+     java JdbcExample postgresql commit 2
+\end{verbatim}
+\noindent sets \texttt{foo} value to 2 and commits the transaction using
+PostgreSQL
+\noindent Another example;
+\begin{verbatim}
+     java JdbcExample mysql rollback 0
+\end{verbatim}
+sets \texttt{foo} value to 0 and rollback the transaction using MySQL
+
+\subsubsection{Using JDBC Example}
+\begin{verbatim}
+     java JdbcExample [database] [completion] [number]
+\end{verbatim}
+where
+\begin{itemize}
+\item \texttt{database} is
+  \begin{itemize}
+  \item \texttt{postgresql} or
+  \item \texttt{mysql} 
+\end{itemize}
+\noindent To determine a installed database, the JDBC example looks
+ for a configuration file with a name \texttt{[database].properties}
+  
+\item \texttt{completion} is
+  \begin{itemize}
+  \item \texttt{commit} to commit the transaction or,
+  \item \texttt{rollback} to rollback the transaction
+  \end{itemize}
+\item \texttt{number} must be an integer
+\end{itemize}
+\subsection{JDBC example output}
+\label{sec:jdbc_output}
+
+For command line:
+\begin{verbatim}
+     java JdbcExample postgresql commit 2
+\end{verbatim}
+the ouptut is 
+\begin{verbatim}
+:
+start server
+
+postgresql configuration:
+-- listing properties --
+login=mojo
+url=jdbc:postgresql://localhost/javatest
+password=jojo
+driver=org.postgresql.Driver
+------------------------
+
+create initial context
+lookup UserTransaction at : UserTransaction
+get a connection
+before transaction, table is:
+        id      foo
+        1       0
+begin a transaction
+update the table
+*commit* the transaction
+after transaction, table is:
+        id      foo
+        1       2
+close connection
+stop server
+JDBC example is ok.
+\end{verbatim}
+As shown above, the transaction is \emph{committed} and \texttt{foo} value
+is set to 2 in the database.
+
+\noindent Another command example:
+\begin{verbatim}
+     java JdbcExample mysql rollback 3
+\end{verbatim}
+outputs:
+\begin{verbatim}
+:
+start server
+
+mysql configuration:
+-- listing properties --
+login=mojo
+url=jdbc:mysql://localhost/javatest
+password=jojo
+driver=org.gjt.mm.mysql.Driver
+------------------------
+
+create initial context
+lookup UserTransaction at : UserTransaction
+get a connection
+before transaction, table is:
+        id      foo
+        1       1
+begin a transaction
+update the table
+*rollback* the transaction
+after transaction, table is:
+        id      foo
+        1       0
+close connection
+stop server
+JDBC example is ok.
+\end{verbatim}
+In this example the value of \texttt{foo} is not changed in the database
+because the transaction is \emph{rolled back}.
+
+\section{JDBC-DIST Example}
+\label{sec:jdbc-dist_example}
+
+The JDBC Distributive example is a simple example showing how to utilize
+ JTA transactions with two databases
+
+\subsection{JDBC-DIST example scenario}
+
+Much of the scenario for the JDBC-DIST example follows the same procedure
+ as the simple JDBC example detailed in Section 3.
+
+\begin{itemize}
+\item 	A database server is configured and started. In this case, 
+two databases are utilized, Javatest1 and Javatest2.
+\item An RMI registry is started (RMI/JRMP)
+\item The JdbcDistExample object is started
+\end{itemize}
+\noindent JdbcExample starts a DistDatabaseHelper object with an embedded JOTM.
+ DistDatabaseHelper sets up the JDBC objects (i.e. java.sql.Connection with
+ XAPool per the configuration file), and sets JOTM as the transaction manager.
+ UserTransaction also binds to JNDI.
+\begin{itemize}
+\item JdbcDistExample asks DistDatabaseHelper for two connections, updates
+ a table in two different databases within a transaction and completes the
+ transaction based on parameters entered by the user.
+\item Update statements are sent to the databases
+\item Transactions are completed (either committed or rolled back)
+\item JdbcDistExample prints the database tables (without transaction)
+\end{itemize}
+
+\subsection{JDBC-DIST example setup, compilation, and execution}
+
+The JDBC-DIST example expects:
+\begin{itemize}
+\item A database named javatest for each host name. If localhost is defined for use,
+ two databases named javatest1 and javatest2 are required.
+\item The SQL commands in the java code reference databases javatest1 and javatest2 
+\item A user with login "mojo" and password "jojo"
+\item A *transactional* table in each database named testdata as outlined in the
+ previous JDBC example
+\end{itemize}
+\noindent Database configurations are stored in properties files.
+ In this example mysql1.properties and mysql2.properties are used. Another
+ example may use postgresql1.properties and postgresql2.properties, and/or
+ oracle1.properties and oracle2.properties. 
+
+\noindent Each database.properties file contains the following:
+\begin{itemize}
+\item driver - Name of the JDBC driver
+\item url - URL to connect to the data base
+\item login - user login
+\item password - user password
+\end{itemize}
+
+\subsection{JDBC-DIST Compilation}
+
+In JOTM\_HOME/examples/jdbc-dist/ directory, to compile the JDBC-DIST example type:
+\begin{verbatim}
+     ant compile
+\end{verbatim}
+
+\subsection{JDBC-DIST Execution}
+Before executing JDBC-DIST example, check that RMI protocol is
+activated (in JOTM\_HOME/conf/carol.properties file, carol.rmi.activated
+is set to jrmp). 
+
+\noindent In JOTM\_HOME/lib/ directory, enter (on a single line): 
+\begin{verbatim}
+UNIX:
+  rmiregistry -J-classpath -Jjotm.jar:jotm_jrmp_stubs.jar: 
+  commons-cli-1.0.jar:connector-1_5.jar:howl.jar: 
+  mysql-connector-java-3.1.6-bin.jar -J-Djava.security.policy=../conf/java.policy & 
+WINDOWS: 
+  rmiregistry -J-classpath -Jjotm.jar;jotm_jrmp_stubs.jar; 
+  commons-cli-1.0.jar;connector-1_5.jar;howl.jar; 
+  mysql-connector-java-3.1.6-bin.jar -J-Djava.security.policy=../conf/java.policy 
+\end{verbatim}
+
+The above starts a RMI registry on default port 1099.
+
+\subsection{JDBC-DIST Classpath}
+In JOTM\_HOME/lib, on one line enter:
+
+\begin{verbatim}
+UNIX:
+    export CLASSPATH=../../lib/jotm.jar: 
+    ../../lib/jotm_jrmp_stubs.jar:../../lib/xapool.jar:../../conf: 
+    ../../lib/connector-1_5.jar:../../lib/howl.jar: 
+    ../../lib/commons-cli-1.0.jar:../../lib/mysql-connector-java-3.1.7-bin.jar:
+    .:../../conf/ & 
+WINDOWS: 
+    set CLASSPATH=%CLASSPATH%;
+    ../../lib/jotm.jar;../../lib/jotm_jrmp_stubs.jar;
+    ../../lib/xapool.jar;../../lib/mysql-connector-java-3.1.7-bin.jar;
+    ../../lib/jdbc.jar;../../lib/connector-1_5.jar;../../lib/howl.jar;
+    ../../lib/commons-cli-1.0.jar;./;../../conf/
+\end{verbatim}
+
+\noindent NOTE: If user or password is other then defined above, or if names other
+ than JAVATEST1/2 are used:
+\begin{itemize}
+\item change database1.properties and database2.properties password/user
+ to reflect database user/password 
+\item change database1.properties and database2.properties 
+to reflect name1 and name2
+\end{itemize}
+
+\subsection{Starting JDBC-DIST example}
+Some examples of JDBC-DIST commands:
+\begin{verbatim}
+UNIX:
+// set table value to 4 and commit the transaction using Oracle 
+java JdbcDistExample oracle1 oracle2 commit 4 
+// set table value to 2 and commit the transaction using PostgreSQL 
+java JdbcDistExample postgresql1 postgres2 commit 2 
+// set table value to 0 but rollback the transaction using MySQL 
+java JdbcDistExample mysql1 mysql2 rollback 0
+// set table value to 2 and commit the transaction using MySQL 
+java JdbcDistExample mysql1 mysql2 commit 2 &
+
+WINDOWS:
+// set table value to 4 and commit the transaction on Oracle
+java JdbcDistExample oracle1 oracle2 commit 4
+// set table value to 2 and commit the transaction on PostgreSQL
+java JdbcDistExample postgresql1 postgres2 commit 2 
+// set table value to 0 but rollback the transaction on MySQL
+java JdbcDistExample mysql1 mysql2 rollback 0 
+// set table value to 2 and commit the transaction using MySQL 
+java JdbcDistExample mysql1 mysql2 commit 0
+\end{verbatim}
+
+\subsection{Examples Mixing JDBC-DIST databases}
+Set table value to 0 on Oracle and rollback the transaction on MySQL
+\begin{verbatim}
+UNIX:
+     java JdbcDistExample oracle1 mysql1 rollback 0 & 
+WINDOWS:
+     java JdbcDistExample oracle1 mysql1 rollback 0
+\end{verbatim}
+
+\subsection{JDBC-DIST execution}
+\begin{verbatim}
+UNIX:
+     java JdbcExample [database1] [database2] [completion] [number] &
+WINDOWS:
+     java JdbcExample [database1] [database2] [completion] [number]
+\end{verbatim}
+
+Where:
+Database[] equals:
+\begin{itemize}
+\item oracle
+\item postgresql 
+\item mysql 
+\end{itemize}
+NOTE: JdbcExample looks for a configuration file name [database].properties
+Completion equals one of the following:
+\begin{itemize}
+\item commit
+\item rollback
+
+\item Number = an integer value
+\end{itemize}
+
+\subsection{JDBC-DIST example output}
+Output is similar to the JDBC example with reports for each database\\
+
+
+\section{JMS Example}
+\label{sec:jms_example}
+
+Any JMS (\htmladdnormallink{Java Message Service}{http://java.sun.com/products/})
+ provider may be used with JOTM to gain advantage of both 
+\emph{message-oriented architecture} and \emph{distributed transactions}.\\
+The JMS example uses JORAM (\url{http://joram.objectweb.org/}) as the
+JMS provider.\\
+
+\noindent All Ant commands are executed from the \texttt{JOTM\_HOME/examples/jms/}
+directory of a JOTM \emph{distribution}. (Examples do not work from the JOTM
+\emph{source} directory).
+
+\subsection{JMS Scenario}
+\label{sec:jms_scenario}
+The \textbf{JMS} example explains how to use JOTM with a JMS provider (JORAM)
+ to provide distributed transactional messages.
+
+\begin{itemize}
+\item The RMI registry is started
+\item JOTM is started with \texttt{UserTransaction} and
+  \texttt{TransactionManager} objects accessible through JNDI
+\item An application (\texttt{SimpleJmsXa} class) starts JORAM, sets up
+  the JMS objects (\texttt{Queue}, \texttt{Session},
+  \texttt{ConnectionFactory}) and registers them in JOTM as XA
+  resources
+\item  The application starts a message sender, 
+  \texttt{SimpleSender}, and a message receiver, \texttt{SimpleReceiver}
+\end{itemize}
+
+\noindent \texttt{SimpleSender} sends 4 messages to a JMS queue:
+\begin{itemize}
+\item one outside a transaction
+\item one inside a transaction with a commit result
+\item one inside a transaction with a rollback result
+\item and a final message with special text to stop SimpleReceiver
+\end{itemize}
+
+\noindent \texttt{SimpleReceiver} receives 3 messages from the same JMS queue:
+\begin{itemize}
+\item the first message outside a transaction
+\item second message inside a transaction with a commit result
+\item the last last message (with the special text)
+\end{itemize}
+
+\noindent NOTE: SimpleReceiver does not receive the 3rd (sent) message
+  because it is rolled back.
+
+\subsection{Setup and compilation}
+\label{sec:jms_setup}
+
+To compile the JMS example, in the JOTM\_HOME/examples/jms directory type:
+\begin{verbatim}
+    ant compile
+\end{verbatim}
+
+\subsection{Executing the JMS example}
+\label{sec:jms_run}
+Set \texttt{JOTM\_HOME} to the directory of your JOTM distribution (e.g.,
+\texttt{../jotm/output/dist}) from CVS.
+\begin{verbatim}
+UNIX
+  export JOTM\_HOME=<JOTM_distribution_directory>
+WINDOWS
+set JOTM\_HOME=<JOTM_distribution_directory>
+\end{verbatim}
+
+\noindent To execute the JMS example, in \texttt{JOTM\_HOME/lib/} type: 
+\begin{verbatim}
+UNIX
+  rmiregistry -J-classpath -Jjotm.jar:jotm_jrmp_stubs.jar  
+  -J-Djava.security.policy=../conf/java.policy &
+WINDOWS
+  rmiregistry -J-classpath -Jjotm.jar;jotm_jrmp_stubs.jar 
+  J-Djava.security.policy=../conf/java.policy
+\end{verbatim}
+
+In \texttt{JOTM\_HOME/lib/}, type (on one line):
+\begin{verbatim}
+UNIX
+  java -classpath jotm.jar:jotm_jrmp_stubs.jar:../conf/  
+  org.objectweb.jotm.Main -u UserTransaction -m TransactionManager&
+WINDOWS
+  java -classpath jotm.jar;jotm_jrmp_stubs.jar;../conf/ 
+  org.objectweb.jotm.Main -u UserTransaction -m TransactionManager
+\end{verbatim}
+
+\noindent In the \texttt{JOTM\_HOME/examples/jms/} directory, type
+\begin{verbatim}
+  ant run.jms
+\end{verbatim}
+
+\noindent Since the client application of the JMS example is a simple
+RMI/JRMP client, use the default protocol configuration for JOTM (i.e
+RMI/JRMP) in \texttt{JOTM\_HOME/conf/carol.properties} file.
+\subsection{JMS Example Output}
+\label{sec:jms_output}
+
+the output of the \textbf{jms} example:
+\begin{verbatim}
+$ ...
+$
+$ [java] [SimpleJmsXa] lookup the TransactionManager.
+$ [java] [SimpleJmsXa] start the JMS server.
+$ [java] [SimpleJmsXa] JMS server started.
+$ [java] [SimpleJmsXa] create JMS objects, register them in JOTM and bind them.
+$ [java] [SimpleJmsXa] JMS objects available.
+$ [java] [SimpleJmsXa] start simple sender.
+$ [java] [SimpleSender] send : non transactional message
+$ [java] [SimpleSender] send : transactional message with commit
+$ [java] [SimpleSender] send : transactional message with rollback
+$ [java] [SimpleSender] send : LAST message
+$ [java] [SimpleJmsXa] start simple receiver.
+$ [java] [SimpleReceiver] received: non transactional message
+$ [java] [SimpleReceiver] received: transactional message with commit
+$ [java] [SimpleReceiver] received: LAST message
+$ [java] [SimpleJmsXa] JMS server stopped
+$
+$ ...
+\end{verbatim}
+
+\noindent If \texttt{SimpleSender} has sent 4 messages and
+\texttt{SimpleReceiver} has received 3 messages, then
+the \textbf{jms} example is working correctly.
+
+
+\section{Tomcat Example}
+\label{sec:tomcat_example}
+
+JOTM may be integrated with Tomcat providing distributed transactional access
+ to resources from Servlets or JSP. \\
+\noindent Using the JDBC example, Tomcat works with any database providing a JDBC driver.
+The Tomcat example uses XAPool to handle transactional behaviors and the 
+pooling of JDBC objects.
+
+\subsection{Tomcat example Scenario}
+\label{sec:tomcat_scenario}
+
+The scenario of the Tomcat example is simple and is based on the example
+provided by Tomcat in JNDI Datasource HOW-TO with the addition of some 
+transaction code.\\
+
+\noindent The user sends a request to a JSP file (\texttt{test.jsp}) requesting 
+\emph{commit} or \emph{rollback} and the incrementation of an integer stored in
+ a database.
+The JSP delegates the JDBC and transaction code to a JavaBean
+(\texttt{foo.DBTest} class).\\
+
+\noindent The code of \texttt{foo.DBTest} is simple:
+\begin{itemize}
+\item a JDBC \texttt{Connection} is created from a \texttt{DataSource} retrieved through JNDI
+\item a \texttt{UserTransaction} is retrieved from JNDI
+\item a transaction is started
+\item the value of the integer \texttt{foo} stored in the
+  database is read (SQL query)
+\item increment the value of \texttt{foo} by 1 in the database (SQL
+  update)
+\item depending on the choice of the user (\texttt{commit} or
+  \texttt{rollback}), the transaction is either \emph{committed} or
+  \emph{rolled back}
+\item \texttt{foo} value from the database (SQL
+  query) is re-read and displayed using the JSP.
+\end{itemize}
+
+\subsection{Tomcat example Setup and Compilation}
+\label{sec:tomcat_setup}
+
+
+\subsubsection{Tomcat setup}
+
+The Tomcat example uses Tomcat downloaded from
+\url{http://jakarta.apache.org}. 
+
+\noindent There's no setup for Tomcat. Unzip Tomcat to a directory to use it.
+
+\subsubsection{Tomcat example Database setup}
+
+The database setup for the Tomcat example is the same as the JDBC example. 
+Please refer to the \hyperref{Database setup}{Database setup (section
+  }{)}{sec:jdbc_db_setup} of the JDBC example.
+
+\noindent Copy the JDBC driver jar file for your database into the \texttt{common/lib/}
+ directory of Tomcat.
+\subsubsection{Compilation}
+\label{sec:tomcat_compilation}
+
+In \texttt{JOTM\_HOME/examples/tomcat/} directory, type
+
+\begin{verbatim}
+  ant war
+\end{verbatim}
+This compiles Java files and creates a WAR file
+(\texttt{examples/tomcat/output/dbtest.war}) containing the web 
+application and all that is required to use JOTM. 
+
+\subsubsection{Tomcat example Deployment}
+Copy the \texttt{output/dbtest.war} file just created, to the
+ \texttt{webapps/} directory of Tomcat.\\
+
+\noindent Copy \texttt{JOTM\_HOME/examples/tomcat/dbtest.xml} to the
+\texttt{webapps/} and \texttt{conf/catalina/localhost directories of Tomcat}.\\
+The dbtest.xml file describes the context associated with your web
+ application. In this file, the properties are set to access your database:
+\begin{itemize}
+\item \texttt{driverClassName} - Name of the JDBC driver
+\item \texttt{url} - URL to connect to the data base
+\item \texttt{username} - user login
+\item \texttt{password} - user password 
+\end{itemize}
+
+NOTE: By default, \texttt{dbtest.xml} is configured to use PostgreSQL
+ as its database. 
+To use another database (i.e. MYSQL), change the properties of this file 
+(specifically the driverClassName and url).\\
+
+\noindent \texttt{dbtest.xml} also describes the resource factories 
+(JDBC and Transaction) used by your web application.
+
+\subsubsection{JOTM jar files}
+Copy the following JOTM jar files, located in the \texttt{JOTM\_HOME/lib/}
+ directory of JOTM, to the common/lib/ directory of Tomcat.
+
+\begin{itemize}
+\item \texttt{jotm.jar}
+\item \texttt{jotm\_jrmp\_stubs.jar}
+\item \texttt{carol-2.0.5.jar}
+\item \texttt{jta-spec1\_0\_1.jar}
+\item \texttt{jts1\_0.jar}
+\item \texttt{commons-logging.jar}
+\item \texttt{log4j.jar}
+\item \texttt{objectweb-datasource.jar}
+\item \texttt{xapool-1.5.0.jar}
+\item \texttt{howl-0.1.8.jar}
+\end{itemize}
+
+\noindent Create a file named carol.properties in the common/classes/ 
+directory of Tomcat with the following properties.
+\begin{verbatim}
+# JNDI (Protocol Invocation)
+carol.protocols=jrmp
+
+# Local RMI Invocation
+carol.jvm.rmi.local.call=true
+
+# do not use CAROL JNDI wrapper
+carol.start.jndi=false
+
+# do not start a name server
+carol.start.ns=false
+
+# Naming Factory
+carol.jndi.java.nameing.factory.url.pkgs=org.apache.nameing
+\end{verbatim}
+
+\subsection{Executing the Tomcat example}
+\label{sec:tomcat_run}
+
+Change directory to the \texttt{bin/} directory of Tomcat and enter:
+\begin{verbatim}
+UNIX
+  ./catalina.sh run
+WINDOWS
+   startup
+\end{verbatim}
+
+Use your favorite browser to go to the URL
+\begin{verbatim}
+http://localhost:8080/dbtest/test.jsp
+\end{verbatim}
+
+\noindent Choose if you want to \texttt{commit} or \texttt{rollback} the 
+value of the integer and click on the completion button.  
+If you've chosen \texttt{commit}, the integer value displayed on the page should
+increment by one. If \texttt{rollback} is chosen, the integer value displayed
+on the page should stay the same (no increment). 
+
+\subsection{Integration of JOTM and Tomcat}
+\label{sec:tomcat_jotm_integration}
+
+For a more technical explanation on the integration of JOTM in Tomcat,
+please refer to Tomcat/JOTM HOW-TO. 
+
+\section{Contacts}
+\label{sec:contacts}
+
+If you have trouble making the examples work or want to
+contribute to JOTM, please contact us (\url{mailto:jotm@objectweb.org}).
+\end{document}

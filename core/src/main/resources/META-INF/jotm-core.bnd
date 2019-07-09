@@ -1,0 +1,9 @@
+Import-Package !org.apache.commons.cli,\
+               *
+
+Export-Package org.objectweb.jotm.*,\
+               org.objectweb.transaction.*
+
+Embed-Dependency howl;inline=true
+
+

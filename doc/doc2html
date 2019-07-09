@@ -1,0 +1,37 @@
+#!/bin/sh
+# a simple script to generate HTML documentation from LaTeX file
+#
+# usage: doc2html <LaTeX file>
+#  (e.g. doc2html install.tex)
+#
+# generated HTML pages will be put in the output/dist/doc/<LaTeX name>
+# (e.g. output/dist/doc/install)
+
+# name of the LaTeX document (with the suffix .tex)
+DOC="$1"
+
+# we extract the name of the LaTeX document without the suffix
+BASEDOC=`basename ${DOC} .tex`
+
+# we create the corresponding directory in ouput/dist/doc
+if [ ! -d ../output/dist/doc/${BASEDOC} ]
+then
+        mkdir -p ../output/dist/doc/${BASEDOC}
+fi
+
+# we create a temporary directory to generate all LaTeX files
+if [ ! -d ../output/tmp/doc/ ]
+then
+        mkdir -p ../output/tmp/doc/
+fi
+
+cp $DOC ../output/tmp/doc/
+cd ../output/tmp/doc/
+# latex command is run 3 times for cross-references resolution
+latex ${DOC}
+latex ${DOC}
+latex ${DOC}
+latex2html -dir ../../dist/doc/${BASEDOC} -split +1 -show_section_numbers -local_icons -info "" ${DOC}
+# we go back to the jotm/doc/ directory
+cd -
+rm -rf ../output/tmp/doc/${DOC}*

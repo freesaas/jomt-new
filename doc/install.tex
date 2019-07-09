@@ -1,0 +1,339 @@
+\documentclass[a4paper,11pt]{article}
+
+\usepackage{html}
+
+\title{JOTM Installation Guide}
+\author{Jeff Mesnil}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+  This guide describes how to install JOTM.
+\end{abstract}
+
+\noindent Updated May 5, 2005 by Roger Perey
+
+\tableofcontents
+
+\section{Introduction}
+\label{sec:intro}
+This guide describes how to install and configure JOTM.\\
+JOTM (Java Open Transaction Manager) is a fully functional
+Open Source implementation of JTA
+(\htmladdnormallink{Java Transaction API} {http://java.sun.com/products/jta/}).\\
+JOTM is a mature
+project in use for several years with the JOnAS
+application server project as the JOnAS transaction
+manager. \\
+
+\noindent If you have any questions or comments on JOTM, do not
+hesitate to let us know. (\url{mailto:jotm@objectweb.org})
+\section{Prerequisites}
+\label{sec:prereq}
+In order to install or use JOTM, a few common tools are required.
+
+\begin{itemize}
+\item A Java platform
+\item The Ant tool for compiling and running the examples
+  provided with JOTM
+\item Additionally, for executing the JOTM test suite
+  , the Junit Framework is required.
+\end{itemize}
+\subsection{Java}
+\label{sec:java_prereq}
+JOTM requires a Java compiler (for executing the \texttt{javac} command),
+ and a Java runtime environment (for executing the \texttt{java} command).
+\begin{itemize}
+\item Sun Java Development Kits are available at \url{http://java.sun.com/j2se/}
+\item IBM Java Development Kits are available at \url{http://www.ibm.com/java/jdk/}
+\end{itemize}
+
+\emph{Presently, JOTM is built and tested using JDK 1.3 and 1.4}
+\subsection{Ant}
+\label{sec:ant_prereq}
+JOTM uses Ant for build processes and for executing the JOTM
+examples.\\
+Download Ant from \url{http://jakarta.apache.org/ant/}.
+Please read the Ant documentation for Ant set up (\url{http://jakarta.apache.org/ant/manual/}).
+
+\subsection{Junit}
+\label{sec:junit_prereq}
+Junit is required by JOTM as the framework for executing the JOTM
+test suite (\url{http://junit.org/}).\\
+If interested in executing JOTM test suite, download Junit from the following web site 
+and copy the supplied \texttt{junit.jar} file to the \texttt{lib/} directory
+ of the Ant installation.
+
+\section{Installing JOTM}
+\label{sec:install}
+JOTM may be downloaded and installed with three possible configurations:
+\begin{itemize}
+\item as a \emph{source package} including source, jars, and examples (test cases)
+\end{itemize}
+
+\noindent \texttt{jotm-x.y-src.tgz} (UNIX/LINUX), \texttt{jotm-x.y-src.zip} (WINDOWS)
+where \texttt{x.y} is the
+ version of JOTM (referenced as JOTM \emph{source package})
+\begin{itemize}
+\item as a \emph{distribution package} jars and examples only (no source)
+\end{itemize}
+\texttt{jotm-x.y.tgz} \texttt{jotm-x.y.zip} (WINDOWS) 
+referenced as JOTM \emph{distribution package}
+\begin{itemize}
+\item from CVS (similar to the source package)
+\end{itemize}
+
+\subsection{From a source or distribution package}
+\label{sec:pack_install}
+Download JOTM packages from the JOTM download page
+(\url{http://www.objectweb.org/jotm/download/}).\\
+To install JOTM from a package, unzip the file with \textbf{gunzip}
+and \textbf{tar} on Unix systems and \textbf{winzip} on Windows
+ creating a new directory \texttt{jotm-x.y}.
+
+\subsection{From CVS}
+\label{sec:cvs_install}
+CVS provides network transparent source control for developers. 
+(For more information see \url{http://www.gnu.org/software/cvs}).\\
+CVS allows other commands (read only) i.e. \textbf{cvs status} or
+\textbf{cvs diff}.\\
+To download JOTM using CVS, enter:\\
+NOTE: Windows users should use a DOS window.
+\begin{verbatim}
+cvs -d:pserver:anonymous@cvs.forge.objectweb.org:/cvsroot/jotm login 
+$ CVS password: [type Enter]
+cvs -z3 
+-d:pserver:anonymous@cvs.forge.objectweb.org:/cvsroot/jotm co -P jotm 
+\end{verbatim}
+
+This creates a working repository of JOTM in the \texttt{jotm/}
+directory
+
+\subsection{Test suite}
+\label{sec:test_install}
+To test JOTM, download Junit 
+(see \hyperref{JUnit}{section}{}{sec:junit_prereq}) and the 
+JOTM Test Suite Guide. Dounloading the JOTM test suite is only possible using CVS.\\
+To download the test suite, within the \textbf{same} directory used for checking out
+ JOTM, enter:\\
+
+\begin{verbatim}
+  $ cvs -d:pserver:anonymous@cvs.forge.objectweb.org:/cvsroot/jotm co -P test
+\end{verbatim}
+This creates a working repository of JOTM Test Suite in the
+\texttt{test/} directory (at the same level as the \texttt{jotm/} directory).\\
+For more information, see ``JOTM Test Suite Guide'' (\url{http://www.objectweb.org/jotm/doc/}).
+
+\subsection{Web site}
+\label{sec:web_install}
+JOTM web site (\url{http://www.objectweb.org/jotm/}) is constructed
+from XML pages kept in the JOTM CVS repository.\\
+To download JOTM Web, from the same directory used for checking out JOTM, enter:\\
+
+\begin{verbatim}
+$ cvs --d:pserver:anonymous@cvs.forge.objectweb.org:/cvsroot/jotm co -P web
+\end{verbatim}
+This creates a working repository of JOTM web site in the
+\texttt{web/} directory.\\
+For more info, see ``ObjectWeb Website Guideline''
+(\url{http://www.objectweb.org/architecture/infrastructure/guideline/}).
+
+
+\section{Ant commands}
+\label{sec:ant_cmds}
+After downloading JOTM as a source package (or from CVS), 
+build JOTM structures (create a JOTM distribution before use.)\\
+JOTM relies on Ant for the build process.\\
+All Ant commands are enterd in the \texttt{jotm/} directory
+(i.e. the same directory containing the \texttt{build.xml} file).\\
+To obtain a list and description of Ant available targets for JOTM,
+type:
+\begin{verbatim}
+  ant -projecthelp
+\end{verbatim}
+
+\subsection{Compile and build JOTM}
+\label{sec:build_cmd}
+This step is necessary if you have installed only source files 
+(e.g. downloaded using CVS or from a source package) or if JOTM source code is 
+ modified.\\
+Enter:
+\begin{verbatim}
+  ant dist
+\end{verbatim}
+This causes a compile of all JOTM source files and creates all jar files.\\
+A working version of JOTM is now available in the
+\texttt{output/dist/} subdirectory (the \emph{distribution} directory
+of JOTM).
+
+\subsection{Generate Javadoc}
+\label{sec:jdoc_cmd}
+To generate JOTM Javadoc, simply type:
+\begin{verbatim}
+  ant jdoc
+\end{verbatim}
+This creates browsable Javadoc pages in the \texttt{output/dist/jdoc/}
+ subdirectory.
+
+
+\subsection{Generate Documentation}
+\label{sec:doc_cmd}
+JOTM documentation is written in LaTeX.\\
+The \textbf{pdflatex} tool generates PDF files and
+\textbf{latex2html} generates HTML files. These tools may
+not be installed on your system.\\
+PDF generation is triggered by the \texttt{pdflatex}
+command. For HTML generation a shell
+script, \textbf{doc2html}, is used. NOTE: At this time, HTML documentation
+generation is only available on Linux. Documentation is 
+available online at \url{http://www.objectweb.org/jotm/doc/} in
+both PDF and HTML formats).
+\begin{itemize}
+\item If \textbf{pdflatex} is installed on your system, 
+generate PDF documentation by entering
+\begin{verbatim}
+  ant -Dpdflatex=1
+\end{verbatim}
+\item For HTML documentation \textbf{latex2html} and working on \emph{Linux}, 
+generate HTML documentation by typing
+\begin{verbatim}
+  ant -Dlatex2html=1
+\end{verbatim}
+\end{itemize}
+
+\noindent For both PDF and HTML documentation, enter
+\begin{verbatim}
+  ant -Dpdflatex=1 -Dlatex2html=1
+\end{verbatim}
+
+\noindent Generated documents are placed in the \texttt{output/dist/doc} directory.
+
+\subsection{Clean JOTM}
+\label{sec:clean_cmd}
+
+To remove files generated during the compilation or build process, enter:
+\begin{verbatim}
+  ant clean
+\end{verbatim}
+This deletes the directory path named \textbf{output} (created by ant -dist).
+
+\section{Project Structure}
+\label{sec:proj_desc}
+
+JOTM may be downloaded under two different \emph{conditions}:
+\begin{itemize}
+\item as a \emph{source} (from a \emph{source} package or CVS)
+\item as a \emph{distribution} (from a \emph{distribution} package)
+\end{itemize}
+
+\subsection{Source Structure}
+\label{sec:source_desc}
+
+When downloading JOTM source, the structure of the \texttt{jotm/}
+directory is:
+\begin{itemize}
+\item \texttt{GettingStarted.txt} - a text file specifying the main Ant targets
+  for JOTM
+\item \texttt{README.txt} - README file
+\item \texttt{build.xml} - the main Ant build file used for building JOTM
+\item \texttt{build.properties} - configuration of Ant properties 
+\item \texttt{archive/} - manifest files for JOTM jar files 
+\item \texttt{bin/} - empty directory 
+\item \texttt{doc/} - all documentation source files
+  (e.g. \texttt{install.tex} used to generate this guide)
+\item \texttt{examples/} - the examples source code
+\item \texttt{ext/} - the extensions used by JOTM. 
+  Composed of properties files for configuration
+\item \texttt{externals/} - libraries for building and using JOTM
+\item \texttt{src/} - JOTM source code
+
+\end{itemize}
+
+\subsection{Distribution Structure}
+\label{sec:dist_desc}
+
+After building JOTM (i.e. the \texttt{output/dist/}
+subdirectory) or if downloaded from a \emph{distribution} package,
+the distribution structure of JOTM follows:
+\begin{itemize}
+\item \texttt{GettingStarted.txt} - a text file containing the main Ant targets
+  for JOTM
+\item \texttt{README.txt} - README file
+\item \texttt{build.xml} - the main Ant build file used for building JOTM
+\item \texttt{build.properties} - configuration of Ant properties
+\item \texttt{bin/} - empty directory
+\item \texttt{archive/} - manifest files for JOTM jars 
+\item \texttt{doc/} - this directory may contain PDF and HTML version of the
+  various documentation files as well as the documentation source 
+(see \hyperref{Generate Documentation}{section}{}{sec:doc_cmd})
+\item \texttt{examples/} - the same directory as in the \emph{source}
+  structure. Compile the examples before running them.
+\item \texttt{src/} - JOTM source code
+\item \texttt{output/} - This directory is created when you run the ANT 
+build and dist commands.
+\end{itemize}
+Subdirectories are created under /output for running JOTM examples:
+\begin{itemize}
+\item \texttt{output/build} - Contains the class files and 
+stubs needed by JOTM
+\item \texttt{output/dist} - has five subdirectories
+\item \texttt{output/dist/conf} - holds the properties 
+files for JOTM execution
+\item \texttt{output/dist/doc} - holds created documentation 
+(PDF and HTML files)
+\item \texttt{output/dist/jdoc/} - Javadoc of JOTM
+\item \texttt{output/dist/lib/} - JOTM library directory (it contains both 
+JOTM jar files and other jar files)
+\item \texttt{output/dist/examples} - holds the subdirectories 
+explained in the JOTM Examples Guide.
+
+\end{itemize}
+
+\section{Running JOTM}
+\label{sec:jotm_run}
+Once the \emph{distribution} of JOTM is built, it's available for use.\\
+For a simple test, change to the \texttt{lib/} directory of your JOTM
+distribution and enter:
+\begin{verbatim}
+  java -classpath jotm.jar org.objectweb.jotm.Main --help
+\end{verbatim}
+A help message should return from JOTM\\
+Congratulations! JOTM is working!\\
+
+
+\subsection{Log configuration}
+\label{sec:log_conf}
+Since JOTM version 1.4,  JOTM has used
+\htmladdnormallink{Commons Logging}{http://jakarta.apache.org/commons/} and 
+\htmladdnormallink{Log4J}{http://jakarta.apache.org/log4j/} 
+as its logging system.\\
+Log configuration is stored in a file, \texttt{log4j.properties},
+located in the \texttt{conf/} directory of your JOTM distribution.\\
+
+\noindent For more information on Commons Logging and Log4J, see
+\htmladdnormallink{Commons Logging Javadoc}{http://jakarta.apache.org/commons/logging/api/index.html}
+and \htmladdnormallink{Log4J documentation}{http://jakarta.apache.org/log4j/docs/documentation.html}.
+
+\section{Examples}
+\label{sec:examples}
+Once you have a \emph{distribution} of JOTM, a test to determine if
+installation is correct, is to run the JOTM examples (in the
+\texttt{examples/} directory of the distribution).\\
+Examples execute from the \texttt{examples/} directory of a
+JOTM \emph{distribution} (Examples do not work from the \texttt{examples/}
+directory of JOTM \emph{source}).\\
+
+\noindent For more information about Examples ine 
+JOTM distribution, read the ``JOTM Examples Guide''
+(\url{http://www.objectweb.org/jotm/doc/}).
+
+\section{Contacts}
+\label{sec:contacts}
+
+If you have trouble installing JOTM, questions, or if you want
+to contribute, please contact us at
+(\url{mailto:jotm@objectweb.org}).
+\end{document}

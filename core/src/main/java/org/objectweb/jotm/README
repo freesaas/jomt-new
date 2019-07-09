@@ -1,0 +1,68 @@
+The JOnAS Transaction Manager
+-----------------------------
+
+JOTM is the JOnAS Transaction Manager.
+It is divided in 2 separate modules:
+	JTM: the JOnAS  distributed transaction manager.
+	JTA: the local implementation of the standard JTA interface.
+
+JTM should be independant of the JTA implementation.
+It uses the standard JTA interface only for these interfaces:
+- Xid
+- Status
+- TransactionRolledbackException
+
+In theory, JTM and JTA should be independant, and the JTS protocol could be
+used as interface. We do NOT use JTS today, but a "JTS like" RMI protocol
+instead.
+
+Description of JTM classes
+--------------------------
+
+TransactionFactory.java		interface TransactionFactory (OTS like)
+
+TransactionFactoryImpl.java	Object that implements the TransactionFactory
+				This object is registered in JNDI.
+
+Control.java			interface Control (OTS like)
+Coordinator.java		interface Coordinator (OTS like)
+Terminator.java			interface Terminator (OTS like)
+RecoveryCoordinator.java	interface RecoveryCoordinator (OTS like)
+Resource.java			interface Resource (OTS like)
+
+ControlImpl.java		Object that implements the 5 interfaces and which
+				represents the transaction. Can act as a subcoordinator
+				if Resource.
+
+RemoteSynchro.java		interface (OTS Synchronization like)
+
+ResourceInfo.java		resource data (for log)
+
+Description of JTA classes
+--------------------------
+
+This module relies on standard JTA interfaces: javax.transaction.
+
+CompletedTransactionListener.java	interface
+
+UserTransactionFactory.java	factory for UserTransaction (JNDI)
+Current.java			implements javax.transaction.UserTransaction
+					   javax.transaction.TransactionManager
+SubCoordinator.java		local Coordinator
+TransactionImpl.java		implements javax.transaction.Transaction
+XidImpl.java			implements javax.transaction.xa.Xid
+
+
+TransactionContext.java		interface of the propagation context that is passed
+				between the different processes (clients and EJBServers)
+TransactionContextCORBA.java	Implementation for DAVID
+TransactionContextRMI.java	Implementation for RMI/JEREMIE
+
+Exceptions used by both modules
+-------------------------------
+HeuristicCommit.java		HeuristicCommit Exception
+HeuristicHazard.java		HeuristicHazard Exception
+HeuristicMixed.java		HeuristicMixed Exception
+HeuristicRollback.java		HeuristicRollback Exception
+InactiveException.java		Inactive Exception
+NotPreparedException.java	NotPrepared Exception

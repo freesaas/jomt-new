@@ -1,0 +1,33 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <parent>
+    <groupId>org.ow2.jotm</groupId>
+    <artifactId>jotm</artifactId>
+    <version>2.2.1</version>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.ow2.jotm</groupId>
+  <artifactId>jotm-jms</artifactId>
+  <description>JOTM: Java Open Transaction Manager - Jms</description>
+  <packaging>jar</packaging>
+  <name>JOTM :: Jms</name>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.objectweb.joram</groupId>
+      <artifactId>joram-mom</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.objectweb.joram</groupId>
+      <artifactId>joram-shared</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.objectweb.joram</groupId>
+      <artifactId>joram-client</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.ow2.spec.ee</groupId>
+      <artifactId>ow2-jta-1.1-spec</artifactId>
+      <scope>provided</scope>
+    </dependency>
+  </dependencies>
+</project>

@@ -1,0 +1,279 @@
+<html>
+  <head>
+    <title>How to integrate JOTM</title>
+  	<link href="common.css" rel="stylesheet">
+  </head>
+
+  <body>
+
+    <h1>How to integrate <a href="http://www.objectweb.org/jotm/">JOTM</a></h1>
+
+    <h2>Target audience</h2>
+    <p>This howto is intended for project developers who wants to
+      integrate JOTM in their Java projects to provide JTA<sup>TM</sup> support for distributed
+    transactions.</p>
+    <p>It is <em>not</em> intended as a general howto for JOTM. For information, on
+    how to use JOTM, you can check the installation and examples guide
+      from the <a
+    href="http://www.objectweb.org/jotm/doc/index.html">documentation
+    page</a> on the JOTM web site.</p>
+
+    <h2>1. JOTM definition</h2>
+    <h3>1.1. What JOTM is</h3>
+    <ul>
+      <li>JOTM (Java<sup>TM</sup> Open transaction Manager) is
+	  ... <strong>a transaction
+	  manager written in Java and released under an Open Source
+	  license (<a
+	  href="http://www.gnu.org/copyleft/lesser.html">LGPL</a>, GNU
+	  Lesser General Public License)</strong>.</li>
+      <li>It is an <strong><a
+	  href="http://www.objectweb.org/">ObjectWeb consortium</a>
+	  project</strong>. The goal of ObjectWeb is to
+      develop Open Source technical components for middleware platforms.</li>
+    <li>JOTM is a relatively <strong>small project by its line number</strong> but a <strong>very
+	big one given the importance of transactions in a distributed
+	  systems</strong>.</li>
+      <li>JOTM <strong>codebase has been used and tested for several years</strong>. At the
+        beginning, JOTM was the transaction manager of <a
+	  href="http://www.objectweb.org/jonas/">JOnAS</a><sup>TM</sup>,
+	  an Open Source J2EE<sup>TM</sup>
+	  server, which
+	  has been extracted to be reused in other projects.</li>
+      <li>JOTM is to be <strong>used by other "containers"</strong>
+        (such as EJB<sup>TM</sup>
+        or Servlet<sup>TM</sup> containers but also standalone Java application) to
+	provide distributed transactions. It is up to those containers to
+	correctly use JOTM with other system parts such as
+	databases or MOM (message-oriented middlewares) to enable
+	transactions support.</li>
+    </ul>
+
+    <h3>1.2. What JOTM is not</h3>
+    <ul>
+      <li>JOTM is <strong>neither a resource manager nor an
+          application server</strong>. It is <em>only</em> a transaction
+        manager.</li>
+      <li>JOTM <strong>does not handle JDBC<sup>TM</sup>,
+          JMS<sup>TM</sup> or JCA<sup>TM</sup>
+          resources</strong>. The only "resources" JOTM handles are
+        XA<sup>TM</sup>
+        resources (as defined by
+        <a
+          href="http://java.sun.com/j2ee/sdk_1.3/techdocs/api/javax/transaction/xa/XAResource.html"><code>javax.transaction.xa.XAResource</code></a>).</li>
+      <li>JOTM <stro ng>does not automatically handle enlistment or delistment of resources
+        </strong>. It is up to the container to do so thanks to the
+          <a href="http://java.sun.com/j2ee/sdk_1.3/techdocs/api/javax/transaction/Transaction.html"><code>javax.transaction.Transaction</code></a> object it can access from
+          the <a
+            href="http://java.sun.com/j2ee/sdk_1.3/techdocs/api/javax/transaction/TransactionManager.html"><code>javax.transaction.TransactionManager</code></a>
+          object. Some libraries doing so are included in JOTM
+          distribution (see <a href="../examples/jdbc/">JDBC</a> and <a href="../examples/jms/">JMS</a> examples).</li>
+    </ul>
+
+    <h3>1.3. Relationship with Java APIs</h3>
+    <h4><a href="http://java.sun.com/products/jta/">JTA</a> (Java Transaction API)</h4>
+    <p>JOTM <em>is</em> an implementation of JTA.</p>
+    <h4><a href="http://java.sun.com/products/jdbc/">JDBC</a> (Java DataBase Connectivity)</h4>
+    <p>JDBC provides connectivity to databases. JDBC defines XA
+      objects (<a
+        href="http://java.sun.com/j2ee/sdk_1.3/techdocs/api/javax/sql/XADataSource.html"><code>javax.sql.XADataSource</code></a>
+      and
+      <a
+        href="http://java.sun.com/j2ee/sdk_1.3/techdocs/api/javax/sql/XAConnection.html"><code>javax.sql.XAConnection</code></a>
+      which can be used to support
+      distributed transactions across several databases. JDBC driver
+      implementers should provide these XA objects so that JOTM can
+      enlist JDBC resources in transactions.</p>
+    <h4><a href="http://java.sun.com/products/jms/">JMS</a> (Java Message Service)</h4>
+    <p>JMS provides a standard API to use MOM in Java. JMS defines a
+      set of XA objects (such as <a
+        href="http://java.sun.com/j2ee/sdk_1.3/techdocs/api/javax/jms/XAConnection.html"><code>javax.jms.XAConnection</code></a>
+      or <a
+        href="http://java.sun.com/j2ee/sdk_1.3/techdocs/api/javax/jms/XASession.html"><code>javax.jms.XASession</code></a>)
+      which can be used to support
+      distributed transactions across several MOMs. As for JDBC, JMS providers
+      should implements these XA objects so that JOTM can
+      enlist JMS resources in transactions.</p>
+    <h4><a href="http://java.sun.com/products/ejb/">EJB</a> (Enterprise JavaBeans)</h4>
+    <p>JOTM can be used by EJB containers to provide both bean-managed
+      and container-manager transaction demarcation and
+      <a
+        href="http://java.sun.com/j2ee/sdk_1.3/techdocs/api/javax/transaction/UserTransaction.html"><code>javax.transaction.UserTransaction</code></a>
+      object to EJB client.</p>
+    <h4><a href="http://java.sun.com/products/servlets/">Servlets</a></h4>
+    <p>JOTM can be used by Servlet containers to provide
+      <code>javax.transaction.UserTransaction</code> object to Servlets
+      and <a href="http://java.sun.com/products/jsp/">JSP</a><sup>TM</sup> (JavaServer Pages).</p>
+
+    <h2>2. JOTM from the outside</h2>
+    <p>From the outside, JOTM is a transaction manager implementing JTA
+      interfaces (as defined in <a
+    href="http://java.sun.com/j2ee/sdk_1.3/techdocs/api/javax/transaction/package-summary.html"><code>javax.transaction</code></a>
+      and
+      <a
+        href="http://java.sun.com/j2ee/sdk_1.3/techdocs/api/javax/transaction/xa/package-summary.html"><code>javax.transaction.xa</code></a>
+      packages).</p>
+    <p>Containers starts JOTM, access JTA objects and then use them to
+      provide distributed transactions support.</p>
+
+    <h3>2.1. <a
+        href="../jdoc/org/objectweb/transaction/jta/package-summary.html"><code>org.objectweb.transaction.jta</code></a>
+      package</h3>
+    <p>JTA defines two main interfaces to interact with a transaction
+      manager:</p>
+    <ul>
+      <li><code>javax.transaction.TransactionManager</code> that
+        allows an application server to manage transaction
+        boundaries.</li>
+      <li><code>javax.transaction.UserTransaction</code> that allows
+        an application to explicitly manage transaction boundaries.</li>
+    </ul>
+    <p>However, JTA does not define how to get those interfaces from
+      a transaction manager.</p>
+    <p>JOTM defines an interface (
+      <a
+        href="../jdoc/org/objectweb/transaction/jta/TMService.html"><code>org.objectweb.transaction.jta.TMService</code></a>)
+      which can be used to
+      get those interfaces. It defines three
+      methods:</p>
+    <ul>
+      <li><code>public
+          org.objectweb.transaction.jta.TransactionManager getTransactionManager()</code>
+	- gets a <code>TransactionManager</code> object. the ObjectWeb
+	<a
+          href="../jdoc/org/objectweb/transaction/jta/TransactionManager.html"><code>TransactionManager</code></a>
+        interface extends the JTA one
+        to provide support for late enlistment of resources</li>
+      <li><code>public javax.transaction.UserTransaction getUserTransaction()</code>
+	- gets a JTA <code>UserTransaction</code> object</li>
+      <li><code>public void stop()</code> - stops the transaction manager</li>
+    </ul>
+    <h3>2.2. Instantiation of JOTM</h3>
+    <p>JOTM defines an object, <a href="../jdoc/org/objectweb/jotm/Jotm.html"><code>org.objectweb.jotm.Jotm</code></a>,
+      which implements <code>org.objectweb.transaction.jta.TMService</code> and can be used to start
+      JOTM. In addition to the <code>TMService</code> methods, it has
+      a public constructor:</p>
+    <ul>
+      <li><code>public Jotm(boolean local, boolean bound)</code> - creates an instance of
+	JOTM.
+	<p>the <code>local</code> boolean states if the
+	  transaction factory used to coordinate
+	  transactions is local to this instance or located on another
+	  instance of JOTM.<br />
+	  If the transaction factory is local, the <code>bound</code> boolean
+	  states if it should be bound to a registry and made
+          accessible through <a
+            href="http://java.sun.com/products/jndi/">JNDI</a><sup>TM</sup>
+          (Java Naming and Directory Interfaces).</p>
+      </li>
+    </ul>
+    <p>The rule to remember is that, in one "transaction domain",
+      there can be one and only
+      one JOTM with a local transaction factory. If there may be other
+      instances, they have to be created with a remote transaction
+      factory which has been bound by the JOTM which created it
+      locally.</p>
+    <h2>3. Integration of JOTM</h2>
+    <p>To integrate JOTM in another product, some additional libraries
+      are required.</p>
+    <h3>3.1. Required libraries</h3>
+    <p>JOTM requires some libraries and API (they are all in the
+      <a href="../lib/"><code>lib/</code></a> directory of JOTM distribution:</p>
+  <ul>
+    <li><code>jotm.jar</code> - JOTM </li>
+    <li><code>jotm_jrmp_stubs.jar</code> - JOTM stubs for RMI/JRMP</li>
+        <li><code>jotm_iiop_stubs.jar</code> - JOTM stubs for RMI/IIOP</li>
+        <li><code>carol.jar</code> - <a href="http://www.objectweb.org/carol/">CAROL</a> (RMI
+  support)</li>
+       <li><code>jta-spec1_0_1.jar</code> - JTA</li>
+       <li><code>jts1_0.jar</code> - <a href="http://java.sun.com/products/jts">JTS</a><sup>TM</sup> (Java Transaction Service)</li>
+       <li><code>jonas_timer.jar</code> - JOnAS timer</li>
+       <li><code>commons-logging.jar</code></li>
+       <li><code>log4j.jar</code> - <a href="http://jakarta.apache.org/log4j/docs/index.html">Log4J</a><sup>TM</sup></li>
+       <li><code>commons-cli.jar</code> - <a
+    href="http://jakarta.apache.org/commons/cli/index.html">CLI</a><sup>TM</sup>
+  (Command-line interface) library
+  (used only by standalone JOTM)</li>
+    </ul>
+      <h3>3.2. Classpath setting</h3>
+    <p>You need to put only the <code>jotm.jar</code> and the
+  jar files of the stubs (<code>jotm_jrmp_stubs.jar</code> and/or**
+  <code>jotm_iiop_stubs.jar</code>) in the classpath .<br /> The other jar files will be
+  loaded thanks to the class-path attribute of the manifest file of
+  <code>jotm.jar</code> (the jar files still need to be in the same
+  location as <code>jotm.jar</code>).</p>
+  <p>JOTM configuration files (RMI support, JNDI properties, trace configurations,...)
+  needs to be placed in a <a href="../config/"><code>config/</code></a> directory at the same
+    level than the <code>lib/</code> directory (the <code>class-path</code>
+    attribute of JOTM jar files will look for them in
+    <code>../config/</code> directory.</p>
+    <p>    ** Note: As of April 2007 it was reported that jars for both the jrmp AND the iiop stubs should be included in the classpath as a workaround for a memory leak reported on the JOTM forum by Arjan Tijms.  The memory leak is caused by an error in the Sun JVM and may eventually be fixed.  See the JOTM forum entry provided by Arjan Tijms on April 13, 20007, for details.</p>
+
+<h3>3.3. RMI registry</h3>
+<p>If you plan to bind JOTM objects such as
+  <code>UserTransaction</code> or <code>TransactionManager</code> in
+  JNDI by using RMI registry (<code>rmiregistry</code>), you'll need
+  to start the registry with
+  specific permissions due to use of CAROL. Such a
+  <a href="../config/java.policy"><code>java.policy</code></a> can be found in the <code>config/</code>
+  directory of JOTM distribution.<br />
+RMI registry will also need to have both <code>jotm.jar</code> and
+  <code>jotm_jrmp_stubs.jar</code> in its classpath.</p>
+<p>From the <code>lib/</code> directory of JOTM, you can start the RMI
+  registry with the following commande:</p>
+<pre>rmiregistry -J-classpath -Jjotm.jar:jotm_jrmp_stubs.jar -J-Djava.security.policy=../config/java.policy</pre>
+
+<h3>3.4. Embedded JOTM</h3>
+    <p>JOTM can be embedded in a "container" (e.g. an EJB container or a
+    Servlets one or a standalone application) and ran in the same JVM.</p>
+    <p>All you have to do is to create in the code of a container an
+    instance of JOTM with a local transaction factory which is not
+    bound:</p>
+    <pre>
+    try {
+       TMService jotm = new Jotm(true, false);
+    } catch (NamingException e) {
+      // thrown only if JOTM is started with a remote transaction
+      // factory or if it has to be bound.
+    }</pre>
+    </ul>
+    <p>Then you can access <code>UserTransaction</code> and
+    <code>TransactionManager</code> objects:</p>
+  <pre>
+    UserTransaction utx = jotm.getUserTransaction();
+    TransactionManager tm = jotm.getTransactionManager();
+  </pre>
+  <p>It's also up to the container developper to choose if it wants to bind these
+    objects in a registry or if they will only be used inside the same
+    JVM. An example of such a case is the <a href="../examples/jdbc/">JDBC example</a> included in the
+    JOTM distribution where <code>TransactionManager</code> is only
+    used locally whereas <code>UserTransaction</code> is bound to a registry.</p>
+<p>For more information, see <a href="../jdoc/org/objectweb/jotm/Jotm.html"><code>Jotm</code> Javadoc</a>.</p>
+  <h3> 3.5 Standalone JOTM</h3>
+  <p>JOTM can be also started as a standalone application. In that
+    case, containers can access JTA objects by looking up them in a
+    registry.</p>
+    <p>To start JOTM as a standalone application, from a command line
+    interface, type:</p>
+    <pre>java org.objectweb.jotm.Main [args]</pre>
+  with some <code>[args]</code> being:</p>
+  <ul>
+    <li><code>-u USER_TRANSACTION_JNDI_NAME</code> - binds a
+      <code>UserTransaction</code> to the registry with the name
+      <code>USER_TRANSACTION_JNDI_NAME</code><p></li>
+    <li><code>-m TRANSACTION_MANAGER_JNDI_NAME</code> - binds a
+      <code>TransactionManager</code> to the registry with the name
+      <code>TRANSACTION_MANAGER_JNDI_NAME</code></li>
+  </ul>
+  <p>To have a complete list of the available arguments, type:</p>
+  <pre>java org.objectweb.jotm.Main --help</pre>
+  <p>Containers can then access those objects by looking up them
+  through JNDI.</p>
+<p>For more information, see <a href="../jdoc/org/objectweb/jotm/Main.html"><code>Main</code> Javadoc</a>.</p>
+<h2>Contacts</h2>
+<p>If you have some trouble to integrate JOTM, any questions or if you want to
+  contribute, do not hesitate to contact <a href="mailto:jotm@objectweb.org">us</a>.</p>
+  </body>
+</html>
+
+

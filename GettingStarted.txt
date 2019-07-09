@@ -1,0 +1,29 @@
+########################################
+#                                      #
+# JOTM (Java Open Transaction Manager) #
+#                                      #
+#      an ObjectWeb project            #
+#                                      #
+########################################
+
+
+JOTM Installation
+-----------------
+jotm is a maven project.
+to rebuild jotm, just type in the current directory:
+
+ $ mvn clean install
+
+This will generate a "jotm home" directory with all necessary files
+to run jotm and its exemples.
+The target directory is in:
+./assemblies/jotm-dist/target/jotm-dist-<version>-bin.dir/jotm-dist-<version>
+This directory holds an untar version of the jotm distribution.
+
+JOTM Examples
+-------------
+
+You can find examples of JOTM in the examples/ directory of the
+jotm distribution.
+See README files in the examples/ subdirectories for more information.
+

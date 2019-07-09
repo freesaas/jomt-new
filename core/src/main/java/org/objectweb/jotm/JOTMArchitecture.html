@@ -1,0 +1,237 @@
+<HTML>
+<HEAD>
+   <TITLE>JOTM Architecture</TITLE>
+    <h1>JOTM Architecture</h1>
+
+    <em>$Revision: 1.1 $ $Date: 2003-12-17 23:22:41 $</em>
+</HEAD>
+<body>
+    <p>JOTM design is very similar to OTS specification (JOTM
+      started as an OTS implementation).
+      However, it is <strong>not</strong> an implementation of OTS and several parts of its
+      design changed significantly from OTS.</p>
+
+    <p>JOTM core interfaces are very similar to OTS (most changes are the
+      type of exception being thrown, <code>RemoteException</code> for JOTM interfaces to
+      conform to RMI):</p>
+
+    <ul>
+      <li><a href="org/objectweb/jotm/Control.html">Control</a></li>
+      <li><a href="org/objectweb/jotm/Terminator.html">Terminator</a></li>
+      <li><a href="org/objectweb/jotm/Coordinator.html">Coordinator</a></li>
+      <li><a href="org/objectweb/jotm/RemoteSynchro.html">RemoteSynchro</a> (equivalent
+      to OTS Synchronization)</li>
+      <li><a href="org/objectweb/jotm/TransactionFactory.html">TransactionFactory</a></li>
+      <li><a href="org/objectweb/jotm/TransactionContext.html">TransactionContext</a></li>
+      <li><a href="org/objectweb/jotm/Resource.html">Resource</a></li>
+    </ul>
+
+    <p>In addition JOTM depends on JTA interfaces:</p>
+    <ul>
+      <li><a href="http://java.sun.com/j2ee/sdk_1.3/techdocs/api/javax/transaction/xa/Xid.html">Xid</a></li>
+      <li><a href="http://java.sun.com/j2ee/sdk_1.3/techdocs/api/javax/transaction/xa/XAResource.html">XAResource</a></li>
+      <li><a href="http://java.sun.com/j2ee/sdk_1.3/techdocs/api/javax/transaction/Status.html">Status</a></li>
+    </ul>
+
+    <p>The most confusing aspect of JOTM is the use of both <code>Resource</code> and
+      <code>XAResource</code> interfaces at different level in the code.
+      This comes from the way JOTM handles distribution and deals
+      with resource managers (RDBMS, MOM, EIS,...)</p>
+
+    <h2>Communicating with Resource Managers</h2>
+
+
+    <p>JOTM relies <em>only</em> on <code>XAResource</code> objects to deal with Resource Managers.
+      All systems supporting distributed transactions (JDBC, JMS, J2EE
+      Connectors) do so by providing an implementation of <code>XAResource</code>
+      interface.<br />
+      Thus, the transaction manager can treat the different resource
+        managers uniformally through the use of the <code>XAResource</code>.</p>
+
+    <h2>Distributed communication</h2>
+
+    <p>However, <code>XAResource</code> is not a remote interface and can't be access
+      through RMI.<br />
+        So if the transaction is using <code>XAResources</code> located on different JVM,
+        JOTM can't directly use <code>XAResources</code>. It need a way to communicate
+        remotely with them.
+        Enter the <code>Resource</code> interface.
+        The <code>Resource</code> interface is almost identical to OTS
+        <code>Resource</code> interface
+        (it only adds <code>RemoteException</code> throwing to method signatures).
+        JOTM communicates remotely with the different <code>XAResources</code> using
+        <code>Resource</code> objects.
+        In fact, one <code>Resource</code> object is used to communicate with the
+        different <code>XAResource</code> on a given JVM.</p>
+
+    <p>To sum up:</p>
+    <ul>
+      <li>JOTM handles <strong>local</strong> Resource Managers
+        through <strong><code>XAResource</code></strong>
+        objects.</li>
+      <li>JOTM handles <strong>remote</strong> XAResources through
+        <strong><code>Resource</code></strong>
+        objects</li>
+    </ul>
+
+    <h2>"Remote 2PC" and "Local 2PC"</h2>
+
+    <p>A quick look at JOTM classes highlights the presence of the same
+      methods (prepare/commit/rollback or variations like doPrepare and so
+      on) in different objects with no clear relations between them.
+      Such objects are:</p>
+    <ul>
+      <li><code>ControlImpl</code> (implements <code>Terminator</code>
+        and <code>Resource</code>)</li>
+      <li><code>Current</code> (implements <code><a
+        href="http://java.sun.com/j2ee/sdk_1.3/techdocs/api/javax/transaction/UserTransaction.html">UserTransaction</a></code>
+        and <code><a href="http://java.sun.com/j2ee/sdk_1.3/techdocs/api/javax/transaction/TransactionManager.html">TransactionManager</a></code>)</li>
+      <li><code>SubCoordinator</code> (implements <code>Resource</code>)</li>
+      <li><code>TransactionImpl</code> (implements <code><a
+        href="http://java.sun.com/j2ee/sdk_1.3/techdocs/api/javax/transaction/Transaction.html">Transaction</a></code>)</li> 
+      <li><code>XAResource</code></li>
+    </ul>
+
+
+    <p>There is a strict hierarchy between these objects as they are all
+      involved in the 2 Phace Commit but at different level:</p>
+
+    <ul>
+      <li><em>Initiators of the 2PC</em> : <code>Current</code> and
+        <code>TransactionImpl</code></li>
+      <li><em>Manager of the remote 2PC</em> : <code>ControlImpl</code></li>
+      <li><em>Manager of the local 2PC</em> :  <code>SubCoordinator</code></li>
+      <li><em>Resource Managers</em> : <code>XAResource</code></li>
+    </ul>
+
+    <h2>Class Description</h2>
+
+    <h3>Current</h3>
+
+    <ul>
+      <li>implements <code>UserTransaction</code> and <code>TransactionManager</code></li>
+      <li>associates the current thread with the correct
+        transaction</li>
+      <li>used to demarcate the transaction (<code>begin,
+        [commit,rollback]</code>)</li>
+    </ul>
+
+    <h3>TransactionImpl</h3>
+
+    <ul>
+      <li>used to terminate the transaction</li>
+      <li>using its transaction context, this object knows if the transaction
+        is only local (all <code>XAResource</code> are in the same JVM) or distributed
+        (<code>XAResources</code> in different JVMs)</li>
+    </ul>
+
+    <h3>SubCoordinator</h3>
+
+    <ul>
+      <li>implements <code>Resource</code></li>
+      <li>handles 2PC of its local <code>XAResources</code></li>
+    </ul>
+
+
+    <h3>ControlImpl</h3>
+
+    <ul>
+      <li>implement <code>Terminator</code></li>
+      <li>handles 2PC of its remote <code>Resources</code> (mostly implemented by
+        <code>SubCoordinator</code>) </li>
+    </ul>
+
+    <h3>XAResource</h3>
+
+    <ul>
+      <li>represents a Resource Manager involved in a transaction</li>
+    </ul>
+
+
+    <h2>2 Phase Commit Engine</h2>
+
+
+    <p>How is the JOTM 2PC engine designed?<br />
+        Which bjects are involved in a 2PC?</p>
+
+    <ul>
+      <li>Completion is started by <code>Current.commit()</code></li>
+
+      <li><code>Current</code> delegates commit() to the <code>Transaction</code> object
+        associated with the current thread (represented by
+        <code>TransactionImpl</code>).</li>
+
+      <li>If the transaction is only local (no remote <code>Resource</code>)</li>
+      <ul>
+        <li><code>SubCoordinator</code> manages the local 2PC and its
+          <code>XAResources</code></li>
+      </ul>
+
+      <li>else</li>
+      <ul>
+        <li><code>ControlImpl</code> calls prepare() on its <code>Resources</code>
+          (i.e. <code>SubCoordinators</code>)</li>
+        <ul>
+          <li>each <code>SubCoordinator</code> calls prepare() on its
+            <code>XAResources</code> and returns the
+            overall vote to <code>ControlImpl</code></li>
+        </ul>
+        <li>if all <code>ControlImpl's</code> <code>Resource</code>
+          voted <code>OK</code> (i.e all
+          <code>SubCoordinators</code>' <code>XAResources</code> voted
+          <code>XA_OK</code>)</li>
+        <ul>
+          <li><code>ControlImpl</code> calls commit() on its <code>Resources</code></li>
+          <ul>
+            <li>each <code>SubCoordinators</code> calls commit() on its
+              <code>XAResources</code></li>
+          </ul>
+          </ul>
+        <li>else</li>
+        <ul>
+          <li><code>ControlImpl</code> calls rollback() on its <code>Resources</code></li>
+          <ul>
+            <li>each <code>SubCoordinators</code> calls rollback() on its
+              <code>XAResources</code></li>
+          </ul>
+        </ul>
+      </ul>
+    </ul>
+
+
+    <p>It is to be noted that a local transaction can be seen as an
+      optimization of a distributed transaction with only one remote
+      <code>Resource</code> which happens to be in the same JVM.<br />
+        So we can avoid the remote call to <code>ControlImpl</code> and just call
+        <code>SubCoordinator_commit_one_phase()</code> (this method
+        corresponds to the remote 1PC but it will handle the local 2PC with the local
+        <code>XAResources</code>.</p>
+
+
+    <p>The hierarchy of call on the objects during the 2PC is:</p>
+
+<pre><code>
+ Current
+
+  \
+
+   TransactionImpl
+
+     \
+
+       ControlImpl
+           // skipped if transaction is local.
+           // manage 2PC on remote Resources.
+
+          \
+
+            SubCoordinator
+               // local transaction.
+               // manage 2PC on local XAResources.
+
+               \
+
+                 XAResource
+      </code></pre>
+</body>
+</HTML>

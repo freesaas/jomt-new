@@ -1,0 +1,354 @@
+<html>
+  <head>
+    <title>How to use JDBC and transactions in Tomcat with JOTM</title>
+    <link href="common.css" rel="stylesheet">
+  </head>
+
+  <body>
+    <h1>How to use JDBC and transactions in <a
+        href="http://jakarta.apache.org/tomcat/">Tomcat</a> with <a
+        href="http://www.objectweb.org/jotm/">JOTM</a></h1>
+
+    <h2>Target audience</h2>
+    <p>This howto is intended for Servlet/JSP developers using Tomcat wanting to
+      take advantage of distributed transactions when using JDBC code
+      in their servlets</p>
+    <p>This howto is based on the
+      <a
+        href="http://jakarta.apache.org/tomcat/tomcat-4.1-doc/jndi-datasource-examples-howto.html">JNDI
+        Datasource HOW-TO</a> provided by Tomcat.</p>
+
+    <p>Tomcat and JOTM versions used in this document:</p>
+    <ul>
+      <li>Tomcat <strong>4.1.X</strong> and Tomcat <strong>5.0.X</strong></li>
+      <li>JOTM <strong>2.0.X</strong></li>
+    </ul>
+    <p>Database used for this document</p>
+    <ul>
+      <li>MySQL
+        <ul>
+          <li>version 4.1.9, using InnoDB</li>
+          <li>with mysql-connector-java version 3.1.7</li>
+        </ul>
+      </li>
+      <li>PostgreSQL
+        <ul>
+          <li>version 7.3.1</li>
+          <li>with pg73jdbc2.jar</li>
+        </ul>
+    </ul>
+
+    <h2>1. Introduction</h2>
+    <p>JOTM (Java Open Transaction Manager) is a transaction manager
+      written in Java and implementating JTA (Java Transaction API.) JOTM
+      is an Open Source project released under a BSD-style license.</p>
+    <p>Tomcat is the servlet container used in the official
+      Reference Implementation for the Java Servlet and JavaServer Pages (JSP)
+      technologies. Tomcat is released under the Apache Software
+      License</p>
+
+    <h2>MySQL configuration</h2>
+
+    <p>Ensure that you follow these instructions as variations can cause problems.</p>
+
+    <p>Create a new test user, a new database and a single test
+    table. Your MySQL user must have a password assigned. The driver
+    fails if you try to connect with an empty password.</p>
+
+    <pre>
+mysql> GRANT ALL PRIVILEGES ON *.* TO mojo@localhost
+    ->   IDENTIFIED BY 'jojo' WITH GRANT OPTION;
+mysql> create database javatest;
+mysql> use javatest;
+mysql> create table testdata (
+    ->   id int not null auto_increment primary key,
+    ->   foo int)type=InnoDB;
+mysql></pre>
+
+    <p>Note: the above user should be removed once testing is complete!</p>
+
+    <p>Next insert some test data into the testdata table.</p>
+
+<pre>
+mysql> insert into testdata values(null, 1);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> select * from testdata;
++----+-----+
+| ID | FOO |
++----+-----+
+|  1 |   1 |
++----+-----+
+1 row in set (0.00 sec)
+
+mysql></pre>
+
+    <p>PostgreSQL configuration and setup is similar.</p>
+
+    <h2>Installing Required JARs</h2>
+
+    <p>In order for a web application to use JOTM, the webapp and
+      Tomcat need to have access to the JOTM jars, as well as the jars
+      it requires</p>
+    <p>Below is a list of required jars. They are all included with <strong>JOTM </strong> binary
+      distribution, available at <a
+      href="http://www.objectweb.org/jotm/">http://www.objectweb.org/jotm</a></p>
+
+    <ul>
+      <li>in the <code>lib/</code> directory
+        <ul>
+          <li><code>jotm.jar</code></li>
+          <li><code>jotm_jrmp_stubs.jar</code></li>
+          <li><code>carol-2.0.5.jar</code></li>
+          <li><code>jta-spec1_0_1.jar</code></li>
+          <li><code>jts1_0.jar</code></li>
+          <li><code>objectweb-datasource.jar</code></li>
+          <li><code>xapool-1.5.0.jar</code></li>
+          <li><code>howl-0.1.8.jar</code></li>
+          <li><code>commons-cli-1.0.jar</code></li>
+          <li><code>connector-1_5.jar</code></li>
+          <li><code>connector-1_5.jar</code></li>
+        </ul>
+      </li>
+    </ul>
+
+
+    <p>All these jar files need to be placed on
+      <code>$TOMCAT_HOME/common/lib/</code> so that both Tomcat and
+      your web application will see them.</p>
+
+    <p>You also need to copy the jar of your JDBC driver to
+    <code>$TOMCAT_HOME/common/lib/</code>. For example:</p>
+    <ul>
+      <li>in the <code>lib/</code> directory
+        <ul>
+          <li><code>mysql-connector-java-X.X.X-bin.jar</code></li>
+          <li><code>pgXXjdbc2.jar</code></li>
+        </ul>
+      </li>
+    </ul>
+    <p>Where X = version</p>
+
+    <h2>Configuring JOTM</h2>
+
+   <p>Create a file named
+      <code>carol.properties</code> with the following properties:</p>
+    <pre># # JNDI (Protocol Invocation)
+carol.protocols=jrmp
+
+# Local RMI Invocation
+carol.jvm.rmi.local.call=true
+
+# do not use CAROL JNDI wrapper
+carol.start.jndi=false
+
+# do not start a name server
+carol.start.ns=false
+
+# Naming Factory
+carol.jndi.java.nameing.factory.url.pkgs=org.apache.nameing
+
+    </pre>
+    <p>This file resides in
+      <code>$TOMCAT_HOME/common/classes/</code>.</p>
+
+    <h2>Configuring Tomcat</h2>
+
+    <h3>server.xml configuration</h3>
+
+    <p>Now that you've installed JOTM, configure
+      Tomcat to access JDBC and transaction resources.
+      This is done in the <code>dbtest.xml</code> file 
+      used by Tomcat to initialize resources used by the web application.</p>
+
+    <pre>
+&lt;Context path="/dbtest" docBase="dbtest.war" debug="0"
+  reloadable="true" crossContext="true"&gt;
+  &lt;!-- Resource configuration for JDBC datasource
+       use XAPool
+  --&gt;
+  &lt;Resource name="jdbc/myDB" auth="Container"
+    type="javax.sql.DataSource"/&gt;
+  &lt;ResourceParams name="jdbc/myDB"&gt;
+    &lt;parameter&gt;
+      &lt;name&gt;factory&lt;/name&gt;
+      &lt;value&gt;org.objectweb.jndi.DataSourceFactory&lt;/value&gt;
+    &lt;/parameter&gt;
+    &lt;!-- configured by default for PostgreSQL, just change the values
+         to set it for your database
+    --&gt;
+    &lt;parameter&gt;&lt;name&gt;username&lt;/name&gt;&lt;value&gt;mojo&lt;/value&gt;&lt;/parameter&gt;
+    &lt;parameter&gt;&lt;name&gt;password&lt;/name&gt;&lt;value&gt;jojo&lt;/value&gt;&lt;/parameter&gt;
+    &lt;parameter&gt;&lt;name&gt;driverClassName&lt;/name&gt;
+      &lt;value&gt;org.postgresql.Driver&lt;/value&gt;&lt;/parameter&gt;
+    &lt;parameter&gt;&lt;name&gt;url&lt;/name&gt;
+      &lt;value&gt;jdbc:postgresql://localhost/javatest&lt;/value&gt;&lt;/parameter&gt;
+    &lt;!--
+       &lt;parameter&gt;&lt;name&gt;driverClassName&lt;/name&gt;
+       &lt;value&gt;org.gjt.mm.mysql.Driver&lt;/value&gt;&lt;/parameter&gt;
+       &lt;parameter&gt;&lt;name&gt;url&lt;/name&gt;
+       &lt;value&gt;jdbc:mysql://localhost/javatest&lt;/value&gt;&lt;/parameter&gt;
+    --&gt;
+  &lt;/ResourceParams&gt;
+  &lt;!-- Resource configuration for UserTransaction
+  use JOTM
+  --&gt;
+  &lt;Resource name="UserTransaction" auth="Container"
+    type="javax.transaction.UserTransaction"/&gt;
+  &lt;ResourceParams name="UserTransaction"&gt;
+    &lt;parameter&gt;
+      &lt;name&gt;factory&lt;/name&gt;
+      &lt;value&gt;org.objectweb.jotm.UserTransactionFactory&lt;/value&gt;
+    &lt;/parameter&gt;
+    &lt;parameter&gt;
+      &lt;name&gt;jotm.timeout&lt;/name&gt;
+      &lt;value&gt;60&lt;/value&gt;
+    &lt;/parameter&gt;
+  &lt;/ResourceParams&gt;
+&lt;/Context&gt;</pre>
+</pre>
+
+    <h3><code>web.xml</code> configuration</h3>
+
+    <p>Configure the <code>web.xml</code> file for the
+      web application</p>
+
+  <pre>
+&lt;?xml version="1.0" encoding="ISO-8859-1"?&gt;
+ &lt;!DOCTYPE web-app PUBLIC
+	"-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
+	"http://java.sun.com/dtd/web-app_2_3.dtd"&gt;
+
+&lt;web-app&gt;
+  &lt;resource-env-ref&gt;
+    &lt;description&gt;
+      DB Connection
+    &lt;/description&gt;
+    &lt;resource-env-ref-name&gt;
+      jdbc/myDB
+    &lt;/resource-env-ref-name&gt;
+    &lt;resource-env-ref-type&gt;
+      javax.sql.DataSource
+    &lt;/resource-env-ref-type&gt;
+  &lt;/resource-env-ref&gt;
+&lt;/web-app&gt;</pre>
+
+    <h2>Test Code</h2>
+
+    <p>Create a simple <code>test.jsp</code> for use.</p>
+
+    <pre>
+&lt;html&gt;
+  &lt;head&gt;
+    &lt;title&gt;DB Test&lt;/title&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+
+    &lt;%
+    String completion = request.getParameter("completion");
+    foo.DBTest test = new foo.DBTest();
+    test.init(completion);
+    %&gt;
+    &lt;h2&gt;Transaction completion&lt;/h2&gt;
+    Transaction completion is :&lt;strong&gt;&lt;%= completion %&gt;&lt;/strong&gt;
+
+    &lt;h2&gt;Results&lt;/h2&gt;
+    Int stored in JDBC : &lt;strong&gt;&lt;%= test.getFoo() %&gt;&lt;/strong&gt;&lt;br /&gt;
+
+    &lt;hr /&gt;
+
+    &lt;form action="test.jsp" method="get"&gt;
+      &lt;input type="radio" name="completion" value="commit" checked="true"&gt; Commit&lt;BR&gt;
+      &lt;input type="radio" name="completion" value="rollback"&gt;Rollback&lt;BR&gt;
+      &lt;button type="submit"&gt;Completion&lt;/button&gt;
+    &lt;/form&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</pre>
+
+    <p>Create a Java class to use the Datasource and
+      transactions.
+      Note: this code isn't anywhere near production ready - it's only supposed to
+      be used as a simple test :-)</p>
+
+    <pre>
+package foo;
+
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
+
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.sql.DataSource;
+import javax.transaction.UserTransaction;
+
+public class DBTest{
+
+    int foo = -1;
+    // value stored in DB
+
+    public void init(String completion) {
+        try{
+            Context ctx = new InitialContext();
+
+            // JDBC stuff
+            DataSource ds =
+                (DataSource)ctx.lookup("java:comp/env/jdbc/myDB");
+
+            UserTransaction ut = (UserTransaction)ctx.lookup("java:comp/UserTransaction");
+
+            java.sql.Connection conn = ds.getConnection();
+
+            System.out.println("<<< beginning the transaction >>>");
+            ut.begin();
+
+             // JDBC statements
+             Statement stmt = conn.createStatement();
+             ResultSet rst =
+                 stmt.executeQuery("select id, foo from testdata");
+             if(rst.next()) {
+                 foo=rst.getInt(2);
+             }
+             System.out.println("foo = "+ foo +" (before completion)");
+
+             PreparedStatement pstmt = conn.prepareStatement("update testdata set foo=? where id=1");
+             pstmt.setInt(1,++foo);
+             pstmt.executeUpdate();
+
+              if (completion != null && completion.equals("commit")) {
+                  System.out.println("<<< committing the transaction >>>");
+                  ut.commit();
+              } else {
+                  System.out.println("<<< rolling back the transaction >>>");
+                  ut.rollback();
+              }
+
+             // we set foo to the value stored in the DB
+             rst =
+                 stmt.executeQuery("select id, foo from testdata");
+             if(rst.next()) {
+                 foo=rst.getInt(2);
+             }
+             System.out.println("foo = "+ foo +" (after completion)");
+
+             conn.close();
+             System.out.println("<<< done >>>");
+        }catch(Exception e) {
+            System.out.print("DBTest >> ");
+            e.printStackTrace();
+        }
+    }
+
+    public String getFoo() { return ""+foo; }
+}</pre>
+
+    <p>Lastly, deploy your web app into
+    <code>$CATALINA_HOME/webapps</code> as a warfile called
+    <code>dbtest.war</code>.</p>
+
+    <p>Once deployed, point a browser at
+    <code>http://localhost:8080/dbtest/test.jsp</code> to view the
+    fruits of your hard work.</p>
+  </body>
+</html>
+

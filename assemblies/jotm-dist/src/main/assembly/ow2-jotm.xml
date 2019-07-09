@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  - JOTM: Java Open Transaction Manager
+  - Copyright (C) 2007 Bull S.A.S.
+  - Contact: jotm@objectweb.org
+  -
+  - This library is free software; you can redistribute it and/or
+  - modify it under the terms of the GNU Lesser General Public
+  - License as published by the Free Software Foundation; either
+  - version 2.1 of the License, or any later version.
+  -
+  - This library is distributed in the hope that it will be useful,
+  - but WITHOUT ANY WARRANTY; without even the implied warranty of
+  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  - Lesser General Public License for more details.
+  -
+  - You should have received a copy of the GNU Lesser General Public
+  - License along with this library; if not, write to the Free Software
+  - Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307
+  - USA
+  -
+  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  - $Id: ow2-jotm.xml 1038 2009-02-19 11:55:39Z durieuxp $
+  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+-->
+
+<assembly xmlns="http://maven.apache.org/POM/4.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
+                              http://maven.apache.org/xsd/assembly-1.0.0.xsd">
+  <id>client</id>
+  <formats>
+    <format>jar</format>
+  </formats>
+  <includeBaseDirectory>false</includeBaseDirectory>
+
+  <dependencySets>
+    <dependencySet>
+      <outputDirectory></outputDirectory>
+      <outputFileNameMapping></outputFileNameMapping>
+      <unpack>true</unpack>
+	  <includes>
+        <include>org.ow2.spec.ee:ow2-jta-1.1-spec</include>
+        <include>org.ow2.jotm:jotm-core</include>
+        <include>org.ow2.carol:carol</include>
+        <include>org.ow2.carol:carol-interceptors</include>
+        <include>commons-logging:commons-logging-api</include>
+        <include>log4j:log4j</include>
+        <include>org.ow2.spec.ee:ow2-connector-1.5-spec</include>
+	  </includes>
+    </dependencySet>
+  </dependencySets>
+
+</assembly>

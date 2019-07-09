@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  - Jotm
+  - $Id: assembly.xml 1021 2009-02-06 09:43:39Z durieuxp $
+  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+-->
+<assembly
+  xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/assembly-1.0.0.xsd">
+  <id>src</id>
+  <formats>
+    <format>tar.gz</format>
+    <format>zip</format>
+  </formats>
+  <includeBaseDirectory>true</includeBaseDirectory>
+
+  <fileSets>
+    <fileSet>
+      <outputDirectory>/</outputDirectory>
+      <!-- include everything but the generated files -->
+      <directory>../../</directory>
+      <excludes>
+        <exclude>**/target/**</exclude>
+        <exclude>**/output/**</exclude>
+        <exclude>**/output-eclipse/**</exclude>
+      </excludes>
+    </fileSet>
+  </fileSets>
+
+</assembly>
